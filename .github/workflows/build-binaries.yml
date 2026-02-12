@@ -1,0 +1,59 @@
+name: Build Binaries
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-pc-windows-msvc
+          - x86_64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.6.5
+
+      - name: Build frontend
+        run: deno task build:fe
+
+      - name: Compile binary
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          EXT=""
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            EXT=".exe"
+          fi
+
+          deno compile \
+            --no-check \
+            --allow-all \
+            --target="${{ matrix.target }}" \
+            --include=frontend/index.html \
+            --include=frontend/dist/app.js \
+            --include=frontend/static/sound/discord_message.mp3 \
+            --output="dist/lan-chat-${{ matrix.target }}${EXT}" \
+            backend/main.ts
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lan-chat-${{ matrix.target }}
+          path: dist/lan-chat-${{ matrix.target }}*

@@ -2,7 +2,8 @@
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-write --watch backend/main.ts",
     "build:fe": "deno run -A npm:esbuild frontend/app.ts --bundle --outfile=frontend/dist/app.js --format=esm --minify",
-    "start": "deno task build:fe && deno run --allow-net --allow-read --allow-write backend/main.ts"
+    "start": "deno task build:fe && deno run --allow-net --allow-read --allow-write backend/main.ts",
+    "build:bin": "deno task build:fe && deno compile --no-check --allow-all --include=frontend/index.html --include=frontend/dist/app.js --include=frontend/static/sound/discord_message.mp3 --output=bin/lan-chat backend/main.ts"
   },
   "imports": {
     "esbuild": "https://deno.land/x/esbuild@v0.20.1/mod.js"

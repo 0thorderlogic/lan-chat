@@ -1,6 +1,11 @@
 /// <reference lib="deno.ns" />
 
-import { extname, join } from "https://deno.land/std@0.210.0/path/mod.ts";
+import {
+  extname,
+  fromFileUrl,
+  join,
+  relative,
+} from "https://deno.land/std@0.210.0/path/mod.ts";
 import { DatabaseSync } from "node:sqlite";
 
 interface ConnectedUser {
@@ -61,7 +66,16 @@ const sessions = new Map<string, SessionData>();
 const rooms = new Set<string>([DEFAULT_ROOM]);
 const messageHistory = new Map<string, ChatMessage[]>();
 
-const dbPath = join(Deno.cwd(), "backend", "chat.sqlite3");
+const moduleDir = fromFileUrl(new URL(".", import.meta.url));
+const embeddedFrontendRoot = join(moduleDir, "..", "frontend");
+const runtimeFrontendRoot = join(Deno.cwd(), "frontend");
+const dbDir = join(Deno.cwd(), "backend");
+const uploadDir = join(Deno.cwd(), "frontend", "static", "uploads");
+
+Deno.mkdirSync(dbDir, { recursive: true });
+Deno.mkdirSync(uploadDir, { recursive: true });
+
+const dbPath = join(dbDir, "chat.sqlite3");
 const db = new DatabaseSync(dbPath);
 
 db.exec(`
@@ -523,6 +537,32 @@ function getContentType(path: string): string {
   }
 }
 
+function resolveSafePath(baseDir: string, requestPath: string): string | null {
+  const cleaned = requestPath.replace(/^\/+/, "");
+  if (!cleaned || cleaned.includes("\0")) return null;
+  const fullPath = join(baseDir, cleaned);
+  const rel = relative(baseDir, fullPath);
+  if (rel.startsWith("..")) return null;
+  return fullPath;
+}
+
+async function readFrontendAsset(path: string): Promise<Uint8Array | null> {
+  const roots = [embeddedFrontendRoot, runtimeFrontendRoot];
+
+  for (const root of roots) {
+    const fullPath = resolveSafePath(root, path);
+    if (!fullPath) continue;
+    try {
+      return await Deno.readFile(fullPath);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) continue;
+      throw error;
+    }
+  }
+
+  return null;
+}
+
 async function handleSignup(req: Request): Promise<Response> {
   const body = await parseJsonBody(req);
   const username = normalizeUsername(String(body.username ?? ""));
@@ -785,11 +825,6 @@ async function handleUpload(req: Request): Promise<Response> {
 
   const ext = extname(file.name);
   const fileName = `${crypto.randomUUID()}${ext}`;
-  const uploadDir = join(Deno.cwd(), "frontend", "static", "uploads");
-
-  try {
-    await Deno.mkdir(uploadDir, { recursive: true });
-  } catch {}
 
   const arrayBuffer = await file.arrayBuffer();
   await Deno.writeFile(join(uploadDir, fileName), new Uint8Array(arrayBuffer));
@@ -1006,9 +1041,23 @@ const handler = async (req: Request): Promise<Response> => {
 
   const path = url.pathname === "/" ? "/index.html" : url.pathname;
   try {
-    const fullPath = join(Deno.cwd(), "frontend", path);
-    const file = await Deno.readFile(fullPath);
-    return new Response(file, {
+    if (path.startsWith("/static/uploads/")) {
+      const relativeUploadPath = path.slice("/static/uploads/".length);
+      const fullUploadPath = resolveSafePath(uploadDir, relativeUploadPath);
+      if (!fullUploadPath) {
+        return new Response("Not Found", { status: 404 });
+      }
+      const file = await Deno.readFile(fullUploadPath);
+      return new Response(file as unknown as BodyInit, {
+        headers: { "content-type": getContentType(path) },
+      });
+    }
+
+    const file = await readFrontendAsset(path);
+    if (!file) {
+      return new Response("Not Found", { status: 404 });
+    }
+    return new Response(file as unknown as BodyInit, {
       headers: { "content-type": getContentType(path) },
     });
   } catch {

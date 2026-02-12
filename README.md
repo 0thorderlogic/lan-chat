@@ -1,5 +1,7 @@
 # LAN Chat
 
+> CRITICAL: This is a 100% vibe coded project don't run this on the wider internet and never allow untrusted access to this program. The first 2 commits show only vibe-coded code however any commits after that are authored by me.
+
 LAN Chat is a lightweight local-network chat app using Deno, WebSockets, and a browser frontend with room-key encryption.
 
 ## Features
@@ -37,8 +39,7 @@ Change it immediately in production by updating the value in `backend/main.ts`.
 
 ### Prerequisites
 
-- [Deno](https://deno.com/) (for local development)
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (for production/LAN)
+- [Deno](https://deno.com/)
 
 ### Local Development
 
@@ -48,23 +49,54 @@ Change it immediately in production by updating the value in `backend/main.ts`.
     ```
 2.  **Access**: Open `http://localhost:8000`.
 
-### Docker Deployment (Recommended for LAN)
+### LAN Deployment
 
-This setup ensures data persistence and easy access across your network.
-
-1.  **Build and Start**:
+1.  **Build Frontend**:
     ```bash
-    docker-compose up -d --build
+    deno task build:fe
     ```
-2.  **Access the App**:
+2.  **Start Server**:
+    ```bash
+    deno task start
+    ```
+3.  **Access the App**:
     - Locally: `http://localhost:8000`
     - LAN Access: Use your computer's local IP (e.g., `http://192.168.1.5:8000`).
 
-### Data Persistence in Docker
+### Build a Standalone Binary
 
-The Docker setup uses volumes to protect your data during updates:
-- `./backend-data`: Stores the SQLite database.
-- `./uploads`: Stores all shared files and images.
+The binary is compiled with `--allow-all`, so permissions are baked in at build time and users do not see runtime permission prompts.
+
+1.  **Build Binary**:
+    ```bash
+    deno task build:bin
+    ```
+2.  **Run Binary**:
+    ```bash
+    ./bin/lan-chat
+    ```
+3.  **Access the App**:
+    - Locally: `http://localhost:8000`
+    - LAN Access: `http://<your-local-ip>:8000`
+
+### GitHub Binary Builds
+
+This repo includes a workflow at `.github/workflows/build-binaries.yml` that builds binaries for:
+- Linux (`x86_64-unknown-linux-gnu`)
+- Windows (`x86_64-pc-windows-msvc`)
+- macOS (`x86_64-apple-darwin`)
+
+Trigger it with:
+- Pushes to `main`
+- Pull requests to `main`
+- Manual run from the Actions tab (`workflow_dispatch`)
+
+The workflow uploads each compiled binary as a downloadable artifact.
+
+### Data Persistence
+
+- SQLite database: `./backend/chat.sqlite3`
+- Uploads: `./frontend/static/uploads`
 
 
 ## Keyboard Shortcuts

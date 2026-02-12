@@ -7,6 +7,9 @@ backend/*.sqlite3-wal
 # Frontend builds
 frontend/dist/
 
+# Binary builds
+bin/
+
 # Static uploads
 frontend/static/uploads/
 
