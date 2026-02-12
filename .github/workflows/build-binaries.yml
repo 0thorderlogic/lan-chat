@@ -3,7 +3,7 @@ name: Build Binaries
 on:
   push:
     branches:
-      - master  
+      - master
   pull_request:
     branches:
       - master
@@ -57,3 +57,38 @@ jobs:
         with:
           name: lan-chat-${{ matrix.target }}
           path: dist/lan-chat-${{ matrix.target }}*
+
+  release:
+    name: Publish Release
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: lan-chat-*
+          merge-multiple: true
+
+      - name: Compute release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          echo "tag=build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "name=Automated Build ${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release and upload binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/lan-chat-*

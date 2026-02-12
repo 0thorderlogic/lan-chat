@@ -57,7 +57,7 @@ Change it immediately in production by updating the value in `backend/main.ts`.
     ```
 2.  **Start Server**:
     ```bash
-    deno task start
+    deno task start --allow-all
     ```
 3.  **Access the App**:
     - Locally: `http://localhost:8000`
@@ -87,11 +87,12 @@ This repo includes a workflow at `.github/workflows/build-binaries.yml` that bui
 - macOS (`x86_64-apple-darwin`)
 
 Trigger it with:
-- Pushes to `main`
-- Pull requests to `main`
+- Pushes to `master`
+- Pull requests to `master`
 - Manual run from the Actions tab (`workflow_dispatch`)
 
-The workflow uploads each compiled binary as a downloadable artifact.
+The workflow always uploads compiled binaries as artifacts.
+For non-PR runs (`push` to `master` and `workflow_dispatch`), it also creates a GitHub prerelease and attaches the binaries there.
 
 ### Data Persistence
 
