@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-write --watch backend/main.ts",
+    "build:fe": "deno run -A npm:esbuild frontend/app.ts --bundle --outfile=frontend/dist/app.js --format=esm --minify",
+    "start": "deno task build:fe && deno run --allow-net --allow-read --allow-write backend/main.ts"
+  },
+  "imports": {
+    "esbuild": "https://deno.land/x/esbuild@v0.20.1/mod.js"
+  }
+}

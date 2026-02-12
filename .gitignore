@@ -1,0 +1,19 @@
+# Databases
+backend/*.sqlite3
+backend/*.sqlite3-journal
+backend/*.sqlite3-shm
+backend/*.sqlite3-wal
+
+# Frontend builds
+frontend/dist/
+
+# Static uploads
+frontend/static/uploads/
+
+# Deno
+.deno/
+deno.lock
+
+# OS files
+.DS_Store
+Thumbs.db

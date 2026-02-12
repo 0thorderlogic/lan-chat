@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAN Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
+    rel="stylesheet">
+  <link id="theme-link" rel="stylesheet" href="/themes/gruvbox.css">
+  <style>
+    :root {
+      --bg-color: #323437;
+      --surface: #2c2e31;
+      --surface-soft: #2c2e31;
+      --sidebar-bg: #2c2e31;
+      --input-bg: #2c2e31;
+      --text-color: #d1d0c5;
+      --text-muted: #abb2bf;
+      --border-color: #3e4246;
+      --accent-color: #e2b714;
+      --accent-soft: rgba(226, 183, 20, 0.15);
+      --success: #91d788;
+      --danger: #ca4754;
+      --shadow-soft: none;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Roboto Mono", monospace !important;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text-color);
+      background: var(--bg-color);
+      font-size: 15px;
+    }
+
+    .mono {
+      font-family: "Roboto Mono", monospace !important;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 80px 1fr;
+      height: 100vh;
+      width: 100vw;
+      background: var(--bg-color);
+    }
+
+    .border-r {
+      border-right: 1px solid var(--border-color) !important;
+    }
+
+    .border-b {
+      border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .border-t {
+      border-top: 1px solid var(--border-color) !important;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 999px;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .app-panel {
+      background: var(--bg-color);
+    }
+
+    .soft-panel {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    #login-overlay {
+      background: rgba(30, 31, 33, 0.85);
+      backdrop-filter: blur(4px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .login-card {
+      background: var(--bg-color);
+      border-radius: 4px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    input,
+    textarea,
+    select {
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent-color);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--text-muted) !important;
+      opacity: 0.5;
+    }
+
+    button {
+      transition: all 0.2s ease;
+    }
+
+    .pill-btn {
+      border-radius: 2px;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 6px 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+    }
+
+    .pill-btn:hover {
+      color: var(--text-color);
+      background: var(--accent-soft);
+    }
+
+    .primary-btn {
+      border-radius: 2px;
+      background: var(--accent-color);
+      color: var(--bg-color);
+      border: none;
+      font-weight: 800;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .primary-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .mini-action-btn {
+      border-radius: 2px;
+      padding: 3px 12px;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      border: none;
+    }
+
+    .mini-action-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent-color);
+    }
+
+    .mini-action-btn.danger {
+      color: var(--danger);
+    }
+
+    .mini-action-btn.danger:hover {
+      background: rgba(202, 71, 84, 0.15);
+      color: var(--danger);
+    }
+
+    .auth-mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .auth-mode-btn {
+      border: none;
+      background: var(--surface);
+      border-radius: 2px;
+      padding: 10px 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .auth-mode-btn.is-active {
+      color: var(--bg-color);
+      background: var(--accent-color);
+    }
+
+    .toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface);
+      padding: 5px 12px;
+      border-radius: 2px;
+      border: none;
+    }
+
+    .toggle-label input {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent-color);
+      border-radius: 4px !important;
+      margin: 0;
+    }
+
+    .room-item {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    .room-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent-color);
+    }
+
+    .room-item.active {
+      color: var(--accent-color);
+      background: var(--accent-soft);
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface);
+      border-radius: 6px;
+      padding: 9px 12px;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text-color);
+    }
+
+    .muted-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .admin-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .admin-user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0;
+    }
+
+    .admin-user-meta {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chat-row {
+      transition: transform 0.16s ease;
+    }
+
+    .chat-row:hover {
+      transform: translateY(-1px);
+    }
+
+    .chat-bubble-wrap {
+      display: flex;
+      gap: 12px;
+      max-width: min(860px, 92%);
+    }
+
+    .chat-bubble-wrap.mine {
+      flex-direction: row-reverse;
+    }
+
+    .avatar-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .bubble-stack {
+      min-width: 0;
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .chat-bubble-wrap.mine .message-meta {
+      justify-content: flex-end;
+    }
+
+    .sender-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .message-time {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .bubble-card {
+      border-radius: 4px;
+      padding: 12px 14px;
+      background: var(--surface);
+      min-width: 100px;
+    }
+
+    .bubble-card.mine {
+      background: var(--accent-soft);
+    }
+
+    .bubble-card.theirs {
+      background: var(--surface);
+    }
+
+    .bubble-card.is-muted {
+      background: var(--bg-color);
+      opacity: 0.5;
+    }
+
+    .message-content {
+      font-size: 16px;
+      color: var(--text-color);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .message-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .reply-anchor {
+      border: none;
+      background: transparent;
+      color: var(--accent-color);
+      opacity: 0.7;
+      padding: 0 0 6px;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: lowercase;
+    }
+
+    .reply-anchor:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .spoiler-content {
+      filter: blur(8px);
+      transition: filter 0.22s ease;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-color);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      padding: 0 4px;
+    }
+
+    .spoiler-content.revealed {
+      filter: none;
+      user-select: text;
+    }
+
+    .muted-message {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      font-style: italic;
+    }
+
+    .inline-unmute-btn {
+      border: none;
+      background: transparent;
+      color: var(--accent-color);
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 6px;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .inline-unmute-btn:hover {
+      text-decoration: underline;
+    }
+
+    .highlight-message .bubble-card {
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 1px var(--accent-color);
+    }
+
+    /* --- NEW CHAT FOOTER --- */
+    .chat-footer {
+      background: var(--bg-color);
+      border-top: 1px solid var(--border-color);
+      padding: 12px 16px;
+      z-index: 10;
+    }
+
+    .footer-container {
+      display: grid;
+      gap: 10px;
+      grid-template-areas:
+        "spoiler timer attach"
+        "input input send";
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media (min-width: 981px) {
+      .footer-container {
+        grid-template-areas: "spoiler attach input timer send";
+        grid-template-columns: auto auto 1fr auto auto;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .f-label {
+        display: none !important;
+      }
+
+      .f-icon {
+        display: block !important;
+      }
+
+      .f-icon-only {
+        display: block !important;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .footer-container {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .f-icon {
+        display: none !important;
+      }
+
+      .f-icon-only {
+        display: none !important;
+      }
+
+      .f-label {
+        display: inline !important;
+      }
+
+      .chat-footer {
+        padding: 12px;
+      }
+    }
+
+    .f-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .f-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .f-btn.is-active {
+      background: var(--accent-color) !important;
+      color: var(--bg-color) !important;
+      border-color: var(--accent-color) !important;
+    }
+
+    .f-btn.ttl-active {
+      background: var(--danger) !important;
+      color: white !important;
+      border-color: var(--danger) !important;
+    }
+
+    .f-spoiler {
+      grid-area: spoiler;
+    }
+
+    .f-timer {
+      grid-area: timer;
+    }
+
+    .f-attach {
+      grid-area: attach;
+    }
+
+    .f-input-wrap {
+      grid-area: input;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all 0.2s;
+      min-height: 44px;
+    }
+
+    .f-input-wrap:focus-within {
+      border-color: var(--accent-color);
+      background: var(--surface-soft);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .f-input-wrap textarea {
+      width: 100%;
+      background: transparent;
+      border: none !important;
+      resize: none;
+      padding: 10px 0;
+      color: var(--text-color);
+      outline: none;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .f-send {
+      grid-area: send;
+      background: var(--accent-color);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .f-send:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+
+    .f-send:active {
+      transform: scale(0.98);
+    }
+
+    #toast-container {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      min-width: 260px;
+      max-width: 380px;
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      animation: slideIn 0.2s ease forwards;
+    }
+
+    .toast-accent {
+      width: 5px;
+      background: var(--accent-color);
+      flex-shrink: 0;
+    }
+
+    .toast-text {
+      padding: 10px 12px;
+      min-width: 0;
+    }
+
+    .toast-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .toast-message {
+      font-size: 12px;
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toast.fade-out {
+      animation: fadeOut 0.2s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+    }
+
+    .mention-tag {
+      background: var(--accent-soft);
+      color: var(--accent-color);
+      padding: 0 4px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .mention-tag:hover {
+      text-decoration: underline;
+    }
+
+    .mention-highlight {
+      background: rgba(226, 183, 20, 0.08);
+      /* Faint accent color bg */
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .ttl-tag {
+      font-size: 10px;
+      color: var(--danger);
+      opacity: 0.6;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ttl-active {
+      color: var(--danger) !important;
+      background: rgba(202, 71, 84, 0.15) !important;
+    }
+
+    #mention-suggestions {
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.3);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 50;
+      min-width: 160px;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+      background: var(--accent-soft);
+      color: var(--accent-color);
+    }
+
+    .suggestion-item img {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    #sidebar-toggle-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      border: none;
+      background: var(--surface);
+      color: var(--text-color);
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #sidebar-toggle-btn:hover {
+      color: var(--accent-color);
+      background: var(--accent-soft);
+    }
+
+    #mobile-sidebar-backdrop {
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100dvh;
+      }
+
+      #app-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(88vw, 340px);
+        transform: translateX(-102%);
+        transition: transform 0.24s ease;
+        z-index: 70;
+        border-right: 1px solid var(--border-color) !important;
+        border-bottom: none !important;
+        max-height: 100dvh;
+        box-shadow: 14px 0 36px rgba(0, 0, 0, 0.35);
+      }
+
+      body.sidebar-open #app-sidebar {
+        transform: translateX(0);
+      }
+
+      #mobile-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        border: none;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 60;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      body.sidebar-open #mobile-sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .mobile-only {
+        display: inline-flex;
+      }
+
+      header {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 !important;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 14px !important;
+        height: auto !important;
+      }
+
+      main {
+        grid-column: 1 / -1 !important;
+        grid-row: 2 !important;
+        min-height: 0;
+      }
+
+      #chat-messages {
+        padding: 16px !important;
+      }
+
+      #reply-preview {
+        padding: 10px 14px !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="overflow-hidden selection:bg-[#e2b714] selection:text-[#323437]">
+  <div id="toast-container"></div>
+  <button id="mobile-sidebar-backdrop" type="button" aria-label="Close sidebar" onclick="closeSidebar()">
+  </button>
+
+  <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center px-6">
+    <div class="login-card p-8 sm:p-10 w-full max-w-xl space-y-7">
+      <div class="space-y-2">
+        <p class="mono text-xs text-[var(--accent-color)] tracking-widest uppercase">
+          lan chat
+        </p>
+        <h1 class="text-3xl sm:text-4xl font-bold text-[var(--text-color)]">
+          Welcome
+        </h1>
+        <p id="auth-subtitle" class="text-sm text-[var(--text-muted)]">
+          Sign in with your username and pin.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="auth-mode-switch">
+          <button id="mode-login-btn" onclick="setAuthMode('login')" class="auth-mode-btn is-active">
+            Sign In
+          </button>
+          <button id="mode-signup-btn" onclick="setAuthMode('signup')" class="auth-mode-btn">
+            Sign Up
+          </button>
+        </div>
+        <div>
+          <label
+            class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">Username</label>
+          <input type="text" id="username-input" class="w-full px-4 py-3" placeholder="How should people call you?">
+        </div>
+        <div>
+          <label
+            class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">PIN</label>
+          <input type="password" id="pin-input" class="w-full px-4 py-3" placeholder="4-12 numeric digits">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">Avatar
+            URL (optional)</label>
+          <input type="text" id="avatar-input" class="w-full px-4 py-3" placeholder="https://example.com/avatar.png">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">Shared
+            Room Key</label>
+          <input type="password" id="room-key-input" class="w-full px-4 py-3"
+            placeholder="This keeps your messages encrypted">
+        </div>
+      </div>
+
+      <button onclick="submitAuth()" class="primary-btn w-full py-3.5 text-sm">
+        <span id="auth-submit-label">Sign In</span>
+      </button>
+      <!-- CRITICAL: Don't uncomment. Don't Remove -->
+      <!-- <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-tight">Root admin default: <span
+                    class="text-[var(--accent-color)] mono">root / 0000</span></p> -->
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <aside id="app-sidebar" class="col-start-1 row-start-1 row-span-2 flex flex-col app-panel border-r">
+      <div class="h-[80px] flex items-center px-6 justify-between">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-widest text-[var(--accent-color)]">
+            lan chat
+          </h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="closeSidebar()" class="pill-btn mobile-only">
+            close
+          </button>
+          <button onclick="createRoom()" class="pill-btn">new room</button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto scrollbar-hide px-6 py-4 space-y-6">
+        <section>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+              rooms
+            </p>
+          </div>
+          <div id="room-list" class="space-y-1"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+              online
+            </p>
+            <span id="user-count" class="text-[10px] text-[var(--accent-color)] mono">0</span>
+          </div>
+          <div id="user-list" class="space-y-1"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+              muted
+            </p>
+            <span id="muted-count" class="text-[10px] text-[var(--accent-color)] mono">0</span>
+          </div>
+          <div id="muted-user-list" class="space-y-1"></div>
+        </section>
+
+        <section id="admin-panel" class="hidden">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+              admin
+            </p>
+            <span id="admin-user-count" class="text-[10px] text-[var(--accent-color)] mono">0</span>
+          </div>
+          <div id="admin-user-list" class="space-y-1"></div>
+          <div class="flex gap-4 mt-4">
+            <button onclick="loadAdminUsers()"
+              class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-color)] uppercase tracking-tight">
+              refresh
+            </button>
+            <button onclick="wipeServerData()"
+              class="text-[10px] text-[var(--danger)] hover:opacity-80 uppercase tracking-tight">
+              wipe
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <div id="profile-card" class="border-t border-[var(--border-color)] p-6 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="min-w-0">
+            <p id="my-username" class="font-bold text-xs truncate text-[var(--accent-color)] uppercase tracking-wider">
+            </p>
+            <p id="my-role" class="text-[11px] text-[var(--text-muted)]">
+              member
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openProfileModal()"
+            class="text-[10px] text-[var(--accent-color)] hover:opacity-80 uppercase tracking-tighter">
+            edit
+          </button>
+          <span class="text-[var(--border-color)]">|</span>
+          <button onclick="logout()"
+            class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-color)] uppercase tracking-tighter">
+            logout
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <header class="h-[80px] border-b border-[var(--border-color)] px-8 flex items-center justify-between app-panel">
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="sidebar-toggle-btn" type="button" class="mobile-only" onclick="toggleSidebar()"
+          aria-label="Open sidebar" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </button>
+        <div class="min-w-0">
+          <p id="current-room-name" class="text-lg font-bold text-[var(--text-color)] opacity-90 lowercase truncate">
+          </p>
+          <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+            <span id="room-online-count" class="text-[var(--accent-color)]">0</span> online
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 justify-end">
+        <label class="toggle-label">
+          <input id="sound-toggle" type="checkbox" onchange="setSoundEnabled(this.checked)">
+          <span>Sound</span>
+        </label>
+        <label class="toggle-label">
+          <input id="desktop-toggle" type="checkbox" onchange="setDesktopEnabled(this.checked)">
+          <span>Desktop</span>
+        </label>
+        <label class="toggle-label">
+          <input id="toast-toggle" type="checkbox" onchange="setToastEnabled(this.checked)">
+          <span>Toasts</span>
+        </label>
+      </div>
+    </header>
+
+    <main class="flex flex-col overflow-hidden app-panel">
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 scrollbar-hide">
+      </div>
+
+      <div id="reply-preview" class="hidden border-t border-[var(--border-color)] px-8 py-3 bg-[var(--surface)]">
+        <div class="flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+              replying to <span id="reply-username" class="text-[var(--accent-color)]"></span>
+            </p>
+            <p id="reply-content-preview" class="text-xs text-[var(--text-color)] opacity-60 truncate">
+            </p>
+          </div>
+          <button onclick="cancelReply()"
+            class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-color)] uppercase">
+            cancel (esc)
+          </button>
+        </div>
+      </div>
+
+
+      <footer class="chat-footer">
+        <div class="footer-container">
+          <!-- Button Group 1: Spoiler, Timer, Attachment (Mobile Row 1) -->
+          <button id="spoiler-toggle" onclick="toggleSpoiler()" class="f-btn f-spoiler" title="Spoiler (S)">
+            <span class="f-icon-only font-bold">!</span>
+            <span class="f-label">Spoiler</span>
+          </button>
+
+          <button id="ttl-toggle" onclick="cycleTTL()" class="f-btn f-timer" title="Self-Destruct (T)">
+            <svg class="f-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span class="f-label">Timer</span>
+            <span id="ttl-label" class="ml-1 opacity-80">OFF</span>
+          </button>
+
+          <button onclick="document.getElementById('file-upload').click()" class="f-btn f-attach" title="Attach (E)">
+            <svg class="f-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+            <span class="f-label">Attach</span>
+          </button>
+
+          <!-- Input Box -->
+          <div class="f-input-wrap">
+            <div id="mention-suggestions" class="scrollbar-hide"></div>
+            <textarea id="message-input" rows="1" placeholder="Type a message..."></textarea>
+          </div>
+
+          <!-- Send Button -->
+          <button id="send-btn" onclick="sendMessage()" class="f-send">
+            <span class="hidden md:inline">SEND</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="max-w-[1100px] mx-auto mt-2 hidden md:block">
+          <div
+            class="flex items-center gap-4 text-[10px] text-[var(--text-muted)] font-mono tracking-widest opacity-40 uppercase">
+            <span>R: Reply last</span>
+            <span>S: Spoiler</span>
+            <span>T: Timer</span>
+            <span>E: Attach</span>
+            <span>N: New Room</span>
+          </div>
+        </div>
+        <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(event)" multiple>
+      </footer>
+    </main>
+  </div>
+
+  <div id="profile-modal"
+    class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="login-card w-full max-w-sm p-8 flex flex-col gap-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[var(--accent-color)]">
+          edit profile
+        </h2>
+        <button onclick="closeProfileModal()"
+          class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-color)] uppercase">
+          close
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label
+            class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">username</label>
+          <input type="text" id="edit-username" class="w-full px-4 py-3" placeholder="New username">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">avatar
+            url</label>
+          <input type="text" id="edit-avatar" class="w-full px-4 py-3" placeholder="https://...">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5">new pin
+            (optional)</label>
+          <input type="password" id="edit-pin" class="w-full px-4 py-3" placeholder="Leave blank to keep current">
+        </div>
+      </div>
+
+      <button onclick="saveProfile()" class="primary-btn w-full py-3.5 text-sm">
+        <span>save changes</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="dist/app.js" type="module"></script>
+</body>
+
+</html>
