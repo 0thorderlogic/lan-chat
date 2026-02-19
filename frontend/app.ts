@@ -1143,17 +1143,18 @@ async function renderMessage(msg: MessageData, resolvedContent?: string) {
       const rContent =
         repliedEl.querySelector(".message-content")?.textContent ||
         repliedEl.querySelector(".spoiler-content")?.textContent || "Media";
+      const safeRName = escapeHtml(rName);
+      const safeRContent = escapeHtml(rContent.substring(0, 30));
       preview =
-        `<div class="text-[10px] opacity-40 italic mb-1 truncate max-w-[200px]">@${rName}: ${
-          rContent.substring(0, 30)
-        }...</div>`;
+        `<div class="text-[10px] opacity-40 italic mb-1 truncate max-w-[200px]">@${safeRName}: ${safeRContent}...</div>`;
     }
 
+    const encodedReplyToId = encodeURIComponent(msg.replyToId);
     replyHtml = `
-            <button onclick="scrollToMessage('${msg.replyToId}')" class="reply-anchor flex flex-col items-start">
+            <button onclick="scrollToMessage('${encodedReplyToId}')" class="reply-anchor flex flex-col items-start">
                 ${preview}
                 <span class="opacity-60">replying to #${
-      msg.replyToId.substring(0, 8)
+      escapeHtml(msg.replyToId.substring(0, 8))
     }</span>
             </button>
         `;
