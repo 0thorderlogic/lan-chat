@@ -1,6 +1,6 @@
 # LAN Chat
 
-> CRITICAL: This is a 100% vibe coded project don't run this on the wider internet and never allow untrusted access to this program. The first 2 commits show only vibe-coded code however any commits after that are authored by me.
+> CRITICAL: This is a 100% vibe coded project don't run this on the wider internet and never allow untrusted access to this program.
 
 LAN Chat is a lightweight local-network chat app using Deno, WebSockets, and a browser frontend with room-key encryption.
 
