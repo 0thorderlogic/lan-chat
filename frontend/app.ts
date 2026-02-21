@@ -1181,9 +1181,24 @@ async function renderMessage(msg: MessageData, resolvedContent?: string) {
 
   const actionButtons = (!isMe && !muted)
     ? `
-        <div class="message-actions opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onclick="replyTo('${msg.id}','${encodedUsername}','${replySnippet}')" class="text-[10px] text-[var(--accent-color)] hover:underline uppercase mr-3">reply</button>
-            <button onclick="toggleUserMute('${encodedUserId}','${encodedUsername}','${encodedAvatar}')" class="text-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] uppercase">mute</button>
+        <div
+          class="message-actions opacity-0 group-hover:opacity-100 transition-opacity"
+          data-msg-id="${msg.id}"
+          data-username="${encodedUsername}"
+          data-reply-snippet="${replySnippet}"
+          data-user-id="${encodedUserId}"
+          data-avatar="${encodedAvatar}"
+        >
+          <button
+            class="message-reply-btn text-[10px] text-[var(--accent-color)] hover:underline uppercase mr-3"
+          >
+            reply
+          </button>
+          <button
+            class="message-mute-btn text-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] uppercase"
+          >
+            mute
+          </button>
         </div>
     `
     : "";
@@ -1221,6 +1236,33 @@ async function renderMessage(msg: MessageData, resolvedContent?: string) {
             </div>
         </div>
     `;
+
+  const actionsEl = div.querySelector(".message-actions") as HTMLElement | null;
+  if (actionsEl) {
+    const msgId = actionsEl.dataset.msgId || "";
+    const username = actionsEl.dataset.username || "";
+    const replySnippetData = actionsEl.dataset.replySnippet || "";
+    const userId = actionsEl.dataset.userId || "";
+    const avatar = actionsEl.dataset.avatar || "";
+
+    const replyBtn = actionsEl.querySelector(
+      ".message-reply-btn",
+    ) as HTMLButtonElement | null;
+    if (replyBtn) {
+      replyBtn.addEventListener("click", () => {
+        (window as any).replyTo(msgId, username, replySnippetData);
+      });
+    }
+
+    const muteBtn = actionsEl.querySelector(
+      ".message-mute-btn",
+    ) as HTMLButtonElement | null;
+    if (muteBtn) {
+      muteBtn.addEventListener("click", () => {
+        (window as any).toggleUserMute(userId, username, avatar);
+      });
+    }
+  }
 
   msgContainer.appendChild(div);
 }
